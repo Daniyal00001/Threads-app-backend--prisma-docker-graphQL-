@@ -4,6 +4,9 @@ import { aborted } from "util";
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const { ApolloServer } = require("apollo-server-express");
+import {prismaClient} from "./lib/db";
+
+
 
 async function startServer() {
     const app = express(); 
@@ -19,9 +22,27 @@ async function startServer() {
         type Query {
             todos: [Todo],
         }
+
+        type Mutation {
+            createUser(firstName: String!, lastName: String!, email: String!, password: String!): Boolean
+        }
         `,
         resolvers: {
-        
+          
+                    Mutation : {
+                        createUser: async (_: any, { firstName, lastName, email, password }:{firstName: string, lastName: string, email: string, password: string}) => {
+                            await prismaClient.user.create({
+                                data: {
+                                    firstName,
+                                    lastName,
+                                    email,
+                                    password,
+                                    salt: "salt"
+                                }
+                            });
+                            return true;
+                        }
+                    },
         }
 
     });

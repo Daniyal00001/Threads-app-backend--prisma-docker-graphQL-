@@ -7,6 +7,7 @@ const express_1 = __importDefault(require("express"));
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const { ApolloServer } = require("apollo-server-express");
+const db_1 = require("./lib/db");
 async function startServer() {
     const app = (0, express_1.default)();
     const server = new ApolloServer({
@@ -21,8 +22,27 @@ async function startServer() {
         type Query {
             todos: [Todo],
         }
+
+        type Mutation {
+            createUser(firstName: String!, lastName: String!, email: String!, password: String!): Boolean
+        }
         `,
-        resolvers: {}
+        resolvers: {
+            Mutation: {
+                createUser: async (_, { firstName, lastName, email, password }) => {
+                    await db_1.prismaClient.user.create({
+                        data: {
+                            firstName,
+                            lastName,
+                            email,
+                            password,
+                            salt: "salt"
+                        }
+                    });
+                    return true;
+                }
+            },
+        }
     });
     await server.start();
     server.applyMiddleware({ app });
